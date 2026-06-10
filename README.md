@@ -2,6 +2,8 @@
 
 An Ableton Live extension that builds a silent harmony guide track from any MIDI clip. Like Scale mode shows you the notes in the key, the Harmony track shows you the notes in the *current chord* — layer it with your own clips in the piano roll to see which notes fit the harmony at any moment.
 
+![The Harmony track in Live: chord clips colored by harmonic function above the source track, with guide notes layered under a melody in the piano roll](screenshot.png)
+
 Right-click a MIDI clip containing chords → **Extract Harmony Track (Clip)**. For multi-clip selections — an arrangement time selection across tracks, or selected session clip slots — use **Extract Harmony Track (Selection)**, which appears alongside the single-clip action when a selection exists. Selected clips are analyzed *together* on the shared timeline, so chords on one track and a bassline on another combine into the true harmony (C+E+G over an A bass reads as Am7). The extension:
 
 1. Quantizes the clip's notes to the beat grid
