@@ -15,7 +15,7 @@ The Harmony track plays no sound: it stays muted and gets no instrument. Re-runn
 ## Requirements
 
 - Ableton Live 12 Suite **beta 12.4.5+** with Extensions enabled (the Extensions SDK is in public beta)
-- Node.js ≥ 22.11
+- Node.js ≥ 24.14.1 (pinned to 24.16.0 in `.nvmrc`)
 
 ## Setup
 
@@ -34,6 +34,14 @@ npm run package # build + produce the distributable .ablx
 ```
 
 Then in Live: Settings → Extensions to install/enable, and right-click any MIDI clip.
+
+## Release
+
+```sh
+npm run release -- patch     # or minor / major / an explicit x.y.z
+```
+
+Bumps `package.json` and `manifest.json` together, runs tests and the build, commits, tags `vX.Y.Z`, and pushes. The release workflow (`.github/workflows/release.yml`) then builds the `.ablx` on CI and attaches it to a GitHub release with generated notes. Add `--dry-run` to preview the steps.
 
 ## How detection works
 

@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm test
+
+      - run: npm run package
+
+      - name: Stamp artifact with version
+        run: cp dist/harmony-track.ablx "harmony-track-${GITHUB_REF_NAME}.ablx"
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: harmony-track-v*.ablx
+          generate_release_notes: true
