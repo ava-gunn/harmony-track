@@ -38,7 +38,7 @@ const tag = `v${version}`
 
 run("git", ["add", "package.json", "package-lock.json", "manifest.json"])
 run("git", ["commit", "-m", `release: ${tag}`])
-run("git", ["tag", tag])
+run("git", ["tag", "-a", tag, "-m", `release: ${tag}`]) // annotated — --follow-tags skips lightweight tags
 run("git", ["push", "--follow-tags", "origin", "HEAD"])
 
 console.log(dryRun ? `Dry run complete — would tag ${tag}` : `Released ${tag} — CI will attach the .ablx to the GitHub release`)
