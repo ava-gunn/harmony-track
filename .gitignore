@@ -1,0 +1,12 @@
+node_modules/
+dist/
+*.ablx
+
+# local extension-host config
+.env
+
+# cloned third-party reference repos (see examples/README.md for sources)
+examples/
+
+.DS_Store
+*.log
