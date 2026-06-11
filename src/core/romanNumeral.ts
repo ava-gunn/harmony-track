@@ -30,16 +30,13 @@ function qualitySuffix(alias: string): string {
   return alias
 }
 
-// "A7 → Dm" in C major is V7/ii, not VI7: a non-diatonic major/dominant chord
-// resolving down a perfect fifth into the next region is an applied dominant
-export function secondaryDominant(chordSymbol: string, nextSymbol: string, key: KeyContext): string | null {
+// a chord qualifies as an applied dominant when it is major/dominant quality
+// and carries at least one out-of-scale tone (else it keeps its plain numeral)
+function appliedDominantRoot(chordSymbol: string, key: KeyContext): { rootChroma: number; seventh: string } | null {
   const chord = Chord.get(chordSymbol)
-  const next = Chord.get(nextSymbol)
-  if (chord.empty || !chord.tonic || next.empty || !next.tonic) return null
-
+  if (chord.empty || !chord.tonic) return null
   const rootChroma = Note.chroma(chord.tonic)
-  const nextChroma = Note.chroma(next.tonic)
-  if (rootChroma == null || nextChroma == null) return null
+  if (rootChroma == null) return null
 
   const isDominantQuality =
     chord.intervals.includes("3M") &&
@@ -49,16 +46,29 @@ export function secondaryDominant(chordSymbol: string, nextSymbol: string, key: 
 
   const scale = new Set(key.scaleIntervals.map(i => (key.rootChroma + i) % 12))
   const chromas = chord.notes.map(n => Note.chroma(n)).filter((c): c is number => c != null)
-  const diatonic = chromas.every(c => scale.has(c))
-  if (diatonic) return null // a plain V7 etc. keeps its ordinary numeral
+  if (chromas.every(c => scale.has(c))) return null
 
-  if ((rootChroma - 7 + 12) % 12 !== nextChroma) return null // must resolve down a fifth
+  return { rootChroma, seventh: chord.intervals.includes("7m") ? "7" : "" }
+}
+
+// "A7 → Dm" in C major is V7/ii, not VI7: a non-diatonic major/dominant chord
+// resolving down a perfect fifth into the next region is an applied dominant
+export function secondaryDominant(chordSymbol: string, nextSymbol: string, key: KeyContext): string | null {
+  const dominant = appliedDominantRoot(chordSymbol, key)
+  if (!dominant) return null
+
+  const next = Chord.get(nextSymbol)
+  if (next.empty || !next.tonic) return null
+  const nextChroma = Note.chroma(next.tonic)
+  if (nextChroma == null) return null
+
+  if ((dominant.rootChroma - 7 + 12) % 12 !== nextChroma) return null // must resolve down a fifth
   if (nextChroma === key.rootChroma) return null // resolving to the tonic is just V
 
   const targetTriad = next.tonic + (next.intervals.includes("3m") ? "m" : "")
   const target = romanNumeral(targetTriad, key)
   if (!target) return null
 
-  const seventh = chord.intervals.includes("7m") ? "7" : ""
-  return `V${seventh}/${target}`
+  return `V${dominant.seventh}/${target}`
 }
+

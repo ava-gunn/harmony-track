@@ -7,9 +7,10 @@ const EXTRACT_ID = "harmony-track.extract"
 const LOCATORS_ID = "harmony-track.locators"
 const SETTINGS_ID = "harmony-track.settings"
 
-// every context-menu scope the SDK offers — settings should be reachable
-// from any right-click since it acts on nothing in particular
-const ALL_SCOPES = [
+// object scopes only — selection scopes co-occur with the clicked object's
+// scope (a selected clip matches both), which doubled the menu entry; every
+// selection right-click lands on an object, so these still cover everywhere
+const SETTINGS_SCOPES = [
   "AudioClip",
   "AudioTrack",
   "ClipSlot",
@@ -19,18 +20,17 @@ const ALL_SCOPES = [
   "Sample",
   "Scene",
   "Simpler",
-  "ClipSlotSelection",
-  "AudioTrack.ArrangementSelection",
-  "MidiTrack.ArrangementSelection",
 ] as const
 
 // selection scopes only — right-clicking a clip selects it first, so the
 // selection actions cover single clips too without duplicate menu entries
 const ACTIONS = [
-  { scope: "ClipSlotSelection", title: "Extract Harmony Track", commandId: EXTRACT_ID },
-  { scope: "MidiTrack.ArrangementSelection", title: "Extract Harmony Track", commandId: EXTRACT_ID },
-  { scope: "MidiTrack.ArrangementSelection", title: "Add Chord Locators", commandId: LOCATORS_ID },
-  ...ALL_SCOPES.map(scope => ({ scope, title: "Harmony Track Settings…", commandId: SETTINGS_ID }) as const),
+  { scope: "ClipSlotSelection", title: "Extract", commandId: EXTRACT_ID },
+  { scope: "MidiTrack.ArrangementSelection", title: "Extract", commandId: EXTRACT_ID },
+  { scope: "MidiTrack.ArrangementSelection", title: "Add locators", commandId: LOCATORS_ID },
+  // Live prefixes action titles with the extension name from manifest.json,
+  // so "Settings" renders as "Harmony Track: Settings"
+  ...SETTINGS_SCOPES.map(scope => ({ scope, title: "Settings", commandId: SETTINGS_ID }) as const),
 ] as const
 
 export function activate(activation: ActivationContext) {

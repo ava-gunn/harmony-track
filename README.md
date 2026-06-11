@@ -4,7 +4,7 @@ An Ableton Live extension that builds a silent harmony guide track from any MIDI
 
 ![The Harmony track in Live: chord clips colored by harmonic function above the source track, with guide notes layered under a melody in the piano roll](screenshot.png)
 
-Select one or more MIDI clips (an arrangement selection or session clip slots), right-click → **Extract Harmony Track**. Selected clips are analyzed *together* on the shared timeline, so chords on one track and a bassline on another combine into the true harmony (C+E+G over an A bass reads as Am7). The extension:
+Select one or more MIDI clips (an arrangement selection or session clip slots), right-click → **Harmony Track: Extract**. Selected clips are analyzed *together* on the shared timeline, so chords on one track and a bassline on another combine into the true harmony (C+E+G over an A bass reads as Am7). The extension:
 
 1. Quantizes the clip's notes to the detection grid (by default following Live's grid setting)
 2. Detects the chord in each grid window and merges consecutive identical chords into regions
@@ -37,17 +37,18 @@ npm run package # build + produce the distributable .ablx
 
 Then in Live: Settings → Extensions to install/enable, and right-click any MIDI clip.
 
-**Add Chord Locators** (on an arrangement selection) runs the same analysis and writes arrangement cue points named after each chord instead of clips — useful for navigating a song's harmony from the timeline.
+**Harmony Track: Add locators** (on an arrangement selection) runs the same analysis and writes arrangement cue points named after each chord instead of clips — useful for navigating a song's harmony from the timeline.
 
 Multi-track selections skip tracks containing a Drum Rack, so percussion doesn't pollute chord detection.
 
 ## Settings
 
-Access the settings by right-clicking and choosing **Harmony Track Settings…**. Settings persist across Live sessions in the extension's storage directory and apply to the next extraction — they don't retroactively change clips already on the Harmony track; re-run the extraction to apply.
+Access the settings by right-clicking and choosing **Harmony Track: Settings**. Settings persist across Live sessions in the extension's storage directory and apply to the next extraction — they don't retroactively change clips already on the Harmony track; re-run the extraction to apply.
 
 | Setting | Default | What it does |
 |---|---|---|
 | **Detection grid** | Auto | The window size for chord detection and note quantization. *Auto* follows Live's current grid setting (snapped to the nearest of 1/16 … 1 bar); or pick an explicit size. Coarser = smoother regions that ignore passing chords; finer = catches quick changes. |
+| **Secondary dominants** | On | Labels a non-diatonic dominant as `V/x` when the chord it resolves to (a fifth down) follows it inside the analyzed selection — a trailing `G` in F reads `II` because its resolution isn't in view. Off = always plain scale-degree numerals (`II`, `VI7`, …). |
 | **Guide range** | 48 – 84 | MIDI pitch range the guide notes span (C2–C5 in Live's octave naming). Widen it if you write in extreme registers; narrow it to reduce clutter. |
 | **Track name** | Harmony | Name of the guide track. The extension reuses any MIDI track with this name and creates one if none exists — rename here if "Harmony" collides with something in your template. |
 | **Color mode** | By harmonic function | *By harmonic function* = circle-of-fifths coloring; *Single color* = every harmony clip gets the same color; *Off* = Live's default clip color. |

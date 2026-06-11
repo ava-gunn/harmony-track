@@ -41,6 +41,7 @@ export function placeClip(view: ClipView, anchorBeat: number, targetDuration: nu
 
 export interface AnalyzeOptions {
   gridBeats?: number
+  secondaryDominants?: boolean
   tonicHue?: number
   diatonicStep?: number
 }
@@ -70,7 +71,7 @@ export function analyzeNotes(
     color: key ? chordColor(r.chord.symbol, key, colorOpts) : null,
   }))
 
-  if (!key) return regions
+  if (!key || opts.secondaryDominants === false) return regions
   return regions.map((r, i) => {
     const next = regions[i + 1]
     if (!next || next.startBeat !== r.endBeat) return r

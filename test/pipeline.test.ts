@@ -123,6 +123,20 @@ describe("analyzeNotes options", () => {
     expect(numerals).toEqual(["I", "V7/ii", "ii", "V7"])
   })
 
+  it("labels secondary dominants only when the resolution is in view", () => {
+    // |Cmaj | A7| — no next region, so A7 keeps its scale-degree numeral
+    const notes = [...chordNotes([60, 64, 67], 0, 4), ...chordNotes([57, 61, 64, 67], 4, 4)]
+    expect(analyzeNotes(notes, 0, 8, C_MAJOR)[1].numeral).toBe("VI7")
+    expect(analyzeNotes(notes, 0, 8, C_MAJOR, { secondaryDominants: false })[1].numeral).toBe("VI7")
+  })
+
+  it("disabling secondary dominants keeps scale-degree numerals even on resolution", () => {
+    // |A7 | Dm| — resolution in view, but the setting is off
+    const notes = [...chordNotes([57, 61, 64, 67], 0, 4), ...chordNotes([50, 53, 57], 4, 4)]
+    expect(analyzeNotes(notes, 0, 8, C_MAJOR, { secondaryDominants: false })[0].numeral).toBe("VI7")
+    expect(analyzeNotes(notes, 0, 8, C_MAJOR)[0].numeral).toBe("V7/ii")
+  })
+
   it("passes color options through to region colors", () => {
     const notes = chordNotes([60, 64, 67], 0, 4)
     const blue = analyzeNotes(notes, 0, 4, C_MAJOR)[0].color

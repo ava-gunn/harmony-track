@@ -98,6 +98,7 @@ function analyzeSelection(context: ExtensionContext<V>, arg: unknown): Analysis 
   const endBeat = Math.ceil(Math.max(...sources.map(s => s.anchor + s.targetDuration)))
   const regions = analyzeNotes(notes, startBeat, endBeat, key, {
     gridBeats,
+    secondaryDominants: settings.secondaryDominants,
     tonicHue: settings.tonicHue,
     diatonicStep: settings.diatonicStep,
   })

@@ -5,6 +5,7 @@ export type ColorMode = "function" | "solid" | "off"
 
 export interface Settings {
   detectionGrid: "auto" | DetectionGrid
+  secondaryDominants: boolean
   guideRangeLow: number
   guideRangeHigh: number
   colorMode: ColorMode
@@ -16,6 +17,7 @@ export interface Settings {
 
 export const DEFAULT_SETTINGS: Settings = {
   detectionGrid: "auto",
+  secondaryDominants: true,
   guideRangeLow: 48,
   guideRangeHigh: 84,
   colorMode: "function",
@@ -36,6 +38,7 @@ export function mergeSettings(raw: unknown): Settings {
 
   const settings: Settings = {
     detectionGrid: pick("detectionGrid", v => v === "auto" || DETECTION_GRIDS.includes(v as DetectionGrid)),
+    secondaryDominants: pick("secondaryDominants", v => typeof v === "boolean"),
     guideRangeLow: pick("guideRangeLow", Number.isInteger),
     guideRangeHigh: pick("guideRangeHigh", Number.isInteger),
     colorMode: pick("colorMode", v => v === "function" || v === "solid" || v === "off"),

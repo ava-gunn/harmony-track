@@ -35,6 +35,8 @@
     </select>
   </div>
 
+  <div class="row"><label for="secondaryDominants">Secondary dominants (V/V)</label><input id="secondaryDominants" type="checkbox"></div>
+
   <div class="row">
     <label>Guide range (MIDI)</label>
     <span>
@@ -89,6 +91,7 @@
   const $ = id => document.getElementById(id);
 
   $("detectionGrid").value = String(SETTINGS.detectionGrid);
+  $("secondaryDominants").checked = SETTINGS.secondaryDominants;
   $("guideRangeLow").value = SETTINGS.guideRangeLow;
   $("guideRangeHigh").value = SETTINGS.guideRangeHigh;
   $("colorMode").value = SETTINGS.colorMode;
@@ -132,6 +135,7 @@
       action: "save",
       settings: {
         detectionGrid: grid === "auto" ? "auto" : Number(grid),
+        secondaryDominants: $("secondaryDominants").checked,
         guideRangeLow: Number($("guideRangeLow").value),
         guideRangeHigh: Number($("guideRangeHigh").value),
         colorMode: $("colorMode").value,
