@@ -24,14 +24,12 @@ const ALL_SCOPES = [
   "MidiTrack.ArrangementSelection",
 ] as const
 
-// distinct titles per scope — when right-clicking a selected clip, Live shows
-// the matching clip-scope AND selection-scope actions side by side
+// selection scopes only — right-clicking a clip selects it first, so the
+// selection actions cover single clips too without duplicate menu entries
 const ACTIONS = [
-  { scope: "MidiClip", title: "Extract Harmony Track (Clip)", commandId: EXTRACT_ID },
-  { scope: "ClipSlotSelection", title: "Extract Harmony Track (Selection)", commandId: EXTRACT_ID },
-  { scope: "MidiTrack.ArrangementSelection", title: "Extract Harmony Track (Selection)", commandId: EXTRACT_ID },
-  { scope: "MidiClip", title: "Add Chord Locators (Clip)", commandId: LOCATORS_ID },
-  { scope: "MidiTrack.ArrangementSelection", title: "Add Chord Locators (Selection)", commandId: LOCATORS_ID },
+  { scope: "ClipSlotSelection", title: "Extract Harmony Track", commandId: EXTRACT_ID },
+  { scope: "MidiTrack.ArrangementSelection", title: "Extract Harmony Track", commandId: EXTRACT_ID },
+  { scope: "MidiTrack.ArrangementSelection", title: "Add Chord Locators", commandId: LOCATORS_ID },
   ...ALL_SCOPES.map(scope => ({ scope, title: "Harmony Track Settings…", commandId: SETTINGS_ID }) as const),
 ] as const
 

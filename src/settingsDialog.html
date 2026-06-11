@@ -43,26 +43,39 @@
     </span>
   </div>
 
-  <div class="row"><label for="scaleToneLayer">Dim scale-tone layer</label><input id="scaleToneLayer" type="checkbox"></div>
   <div class="row"><label for="trackName">Track name</label><input id="trackName" type="text" style="width:140px"></div>
 
   <fieldset>
     <legend>Colors</legend>
-    <div class="row"><label for="colorByFunction">Color clips by function</label><input id="colorByFunction" type="checkbox"></div>
     <div class="row">
+      <label for="colorMode">Color mode</label>
+      <select id="colorMode">
+        <option value="function">By harmonic function</option>
+        <option value="solid">Single color</option>
+        <option value="off">Off</option>
+      </select>
+    </div>
+    <div class="row" id="tonicHueRow">
       <label for="tonicHue">Tonic hue</label>
       <span class="hue-row">
         <input id="tonicHue" type="range" min="0" max="359" step="1">
         <span class="swatch" id="tonicSwatch"></span>
       </span>
     </div>
-    <div class="row">
+    <div class="row" id="diatonicStepRow">
       <label for="diatonicStep">Diatonic spread</label>
       <select id="diatonicStep">
         <option value="16">Narrow</option>
         <option value="24">Default</option>
         <option value="32">Wide</option>
       </select>
+    </div>
+    <div class="row" id="solidHueRow">
+      <label for="solidHue">Color</label>
+      <span class="hue-row">
+        <input id="solidHue" type="range" min="0" max="359" step="1">
+        <span class="swatch" id="solidSwatch"></span>
+      </span>
     </div>
   </fieldset>
 
@@ -78,9 +91,10 @@
   $("detectionGrid").value = String(SETTINGS.detectionGrid);
   $("guideRangeLow").value = SETTINGS.guideRangeLow;
   $("guideRangeHigh").value = SETTINGS.guideRangeHigh;
-  for (const k of ["scaleToneLayer", "colorByFunction"]) $(k).checked = SETTINGS[k];
+  $("colorMode").value = SETTINGS.colorMode;
   $("trackName").value = SETTINGS.trackName;
   $("tonicHue").value = SETTINGS.tonicHue;
+  $("solidHue").value = SETTINGS.solidHue;
   if (![...$("diatonicStep").options].some(o => Number(o.value) === SETTINGS.diatonicStep)) {
     const custom = document.createElement("option");
     custom.value = String(SETTINGS.diatonicStep);
@@ -89,11 +103,21 @@
   }
   $("diatonicStep").value = String(SETTINGS.diatonicStep);
 
-  const paintSwatch = () => {
+  const paintSwatches = () => {
     $("tonicSwatch").style.background = `hsl(${$("tonicHue").value}, 65%, 55%)`;
+    $("solidSwatch").style.background = `hsl(${$("solidHue").value}, 65%, 55%)`;
   };
-  $("tonicHue").addEventListener("input", paintSwatch);
-  paintSwatch();
+  const showModeRows = () => {
+    const mode = $("colorMode").value;
+    $("tonicHueRow").style.display = mode === "function" ? "flex" : "none";
+    $("diatonicStepRow").style.display = mode === "function" ? "flex" : "none";
+    $("solidHueRow").style.display = mode === "solid" ? "flex" : "none";
+  };
+  $("tonicHue").addEventListener("input", paintSwatches);
+  $("solidHue").addEventListener("input", paintSwatches);
+  $("colorMode").addEventListener("change", showModeRows);
+  paintSwatches();
+  showModeRows();
 
   function send(data) {
     const msg = { method: "close_and_send", params: [JSON.stringify(data)] };
@@ -110,10 +134,10 @@
         detectionGrid: grid === "auto" ? "auto" : Number(grid),
         guideRangeLow: Number($("guideRangeLow").value),
         guideRangeHigh: Number($("guideRangeHigh").value),
-        scaleToneLayer: $("scaleToneLayer").checked,
-        colorByFunction: $("colorByFunction").checked,
+        colorMode: $("colorMode").value,
         tonicHue: Number($("tonicHue").value),
         diatonicStep: Number($("diatonicStep").value),
+        solidHue: Number($("solidHue").value),
         trackName: $("trackName").value.trim() || "Harmony",
       },
     });

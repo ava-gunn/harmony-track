@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest"
 import { guideNotes, MAX_GUIDE_PITCH, MIN_GUIDE_PITCH } from "../src/core/guideNotes.js"
-import { C_MAJOR } from "./helpers.js"
 
 describe("guideNotes", () => {
   it("emits every chord tone in every octave of the default guide range", () => {
@@ -22,19 +21,6 @@ describe("guideNotes", () => {
   it("spans the full clip duration at velocity 127", () => {
     const notes = guideNotes("Am7", 8)
     expect(notes.every(n => n.startTime === 0 && n.duration === 8 && n.velocity === 127)).toBe(true)
-  })
-
-  it("adds in-key non-chord tones at velocity 1", () => {
-    const notes = guideNotes("Cmaj", 4, { scaleToneLayer: true, key: C_MAJOR })
-    const dim = notes.filter(n => n.velocity === 1)
-    expect(dim.length).toBeGreaterThan(0)
-    expect(dim.every(n => [2, 5, 9, 11].includes(n.pitch % 12))).toBe(true) // D F A B
-    expect(notes.filter(n => n.pitch % 12 === 0).every(n => n.velocity === 127)).toBe(true)
-  })
-
-  it("adds no dim layer without a key", () => {
-    const notes = guideNotes("Cmaj", 4, { scaleToneLayer: true, key: null })
-    expect(notes.every(n => n.velocity === 127)).toBe(true)
   })
 
   it("covers all four tones of a seventh chord", () => {

@@ -7,15 +7,15 @@ import {
   type ArrangementSelection,
   type ClipSlotSelection,
   type ExtensionContext,
-  type Handle,
   type Song,
   type Track,
 } from "@ableton-extensions/sdk"
+import { solidColor } from "./core/chordColor.js"
 import { guideNotes } from "./core/guideNotes.js"
 import { activeWindowLength, analyzeNotes, placeClip } from "./core/pipeline.js"
 import type { Settings } from "./core/settings.js"
 import type { ChordRegion, ClipView, KeyContext } from "./core/types.js"
-import { locateClip, readClipView } from "./live/clipLocation.js"
+import { readClipView } from "./live/clipLocation.js"
 import { liveGridBeats } from "./live/grid.js"
 import { deleteOverlappingClips, findOrCreateHarmonyTrack } from "./live/harmonyTrack.js"
 import { loadSettings } from "./live/settingsStore.js"
@@ -69,13 +69,8 @@ function collectSources(context: ExtensionContext<V>, song: Song<V>, arg: unknow
     })
   }
 
-  const clip = context.getObjectFromHandle(arg as Handle, MidiClip)
-  const location = locateClip(song, clip)
-  if (!location) return []
-  if (location.kind === "session") return [sourceFromSessionClip(clip, location.track)]
-  return [
-    { track: location.track, anchor: clip.startTime, view: readClipView(clip), targetDuration: clip.duration },
-  ]
+  console.error("[HarmonyTrack] unexpected command argument shape")
+  return []
 }
 
 interface Analysis {
@@ -116,10 +111,6 @@ export async function extractHarmonyTrack(context: ExtensionContext<V>, arg: unk
   if (!analysis) return
   const { sources, regions, settings } = analysis
 
-  const key: KeyContext | null = song.scaleMode
-    ? { rootChroma: song.rootNote, scaleName: song.scaleName, scaleIntervals: song.scaleIntervals }
-    : null
-
   await context.ui.withinProgressDialog("Extracting harmony…", { progress: 0 }, async (update, signal) => {
     if (regions.length === 0) {
       await update("No chords detected", 100)
@@ -141,12 +132,11 @@ export async function extractHarmonyTrack(context: ExtensionContext<V>, arg: unk
           const length = region.endBeat - region.startBeat
           const guideClip = await track.createMidiClip(region.startBeat, length)
           guideClip.name = region.numeral ? `${region.chord} / ${region.numeral}` : region.chord
-          if (settings.colorByFunction && region.color != null) guideClip.color = region.color
+          if (settings.colorMode === "function" && region.color != null) guideClip.color = region.color
+          else if (settings.colorMode === "solid") guideClip.color = solidColor(settings.solidHue)
           guideClip.notes = guideNotes(region.chord, length, {
             low: settings.guideRangeLow,
             high: settings.guideRangeHigh,
-            scaleToneLayer: settings.scaleToneLayer,
-            key,
           })
         }
       })()

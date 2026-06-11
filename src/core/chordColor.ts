@@ -53,6 +53,11 @@ export function chordColor(chordSymbol: string, key: KeyContext, opts: ColorOpti
   return hslToRgb(hue, 0.65, 0.55)
 }
 
+// the same saturation/lightness as function colors, for solid-color mode
+export function solidColor(hue: number): number {
+  return hslToRgb(hue, 0.65, 0.55)
+}
+
 function hslToRgb(hue: number, saturation: number, lightness: number): number {
   const chroma = (1 - Math.abs(2 * lightness - 1)) * saturation
   const h = hue / 60

@@ -9,19 +9,20 @@ describe("mergeSettings", () => {
   })
 
   it("keeps valid fields and defaults the rest", () => {
-    const merged = mergeSettings({ detectionGrid: 2, trackName: "Chords", scaleToneLayer: false })
+    const merged = mergeSettings({ detectionGrid: 2, trackName: "Chords", colorMode: "solid" })
     expect(merged.detectionGrid).toBe(2)
     expect(merged.trackName).toBe("Chords")
-    expect(merged.scaleToneLayer).toBe(false)
+    expect(merged.colorMode).toBe("solid")
     expect(merged.guideRangeLow).toBe(DEFAULT_SETTINGS.guideRangeLow)
     expect(merged.tonicHue).toBe(DEFAULT_SETTINGS.tonicHue)
   })
 
   it("rejects invalid values per field", () => {
-    const merged = mergeSettings({ detectionGrid: 3, guideRangeLow: 1.5, trackName: "  " })
+    const merged = mergeSettings({ detectionGrid: 3, guideRangeLow: 1.5, trackName: "  ", colorMode: "rainbow" })
     expect(merged.detectionGrid).toBe("auto")
     expect(merged.guideRangeLow).toBe(DEFAULT_SETTINGS.guideRangeLow)
     expect(merged.trackName).toBe("Harmony")
+    expect(merged.colorMode).toBe("function")
   })
 
   it("clamps and orders the guide range", () => {
@@ -31,9 +32,16 @@ describe("mergeSettings", () => {
   })
 
   it("clamps color options", () => {
-    const merged = mergeSettings({ tonicHue: 400, diatonicStep: 100 })
+    const merged = mergeSettings({ tonicHue: 400, diatonicStep: 100, solidHue: -20 })
     expect(merged.tonicHue).toBe(359)
     expect(merged.diatonicStep).toBe(48)
+    expect(merged.solidHue).toBe(0)
+  })
+
+  it("maps the legacy colorByFunction boolean onto colorMode", () => {
+    expect(mergeSettings({ colorByFunction: false }).colorMode).toBe("off")
+    expect(mergeSettings({ colorByFunction: true }).colorMode).toBe("function")
+    expect(mergeSettings({ colorByFunction: false, colorMode: "solid" }).colorMode).toBe("solid")
   })
 
   it("drops unknown fields from newer versions", () => {

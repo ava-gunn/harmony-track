@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { chordColor, chordHue } from "../src/core/chordColor.js"
+import { chordColor, chordHue, solidColor } from "../src/core/chordColor.js"
 import { C_MAJOR } from "./helpers.js"
 
 const hue = (symbol: string) => chordHue(symbol, C_MAJOR)!
@@ -76,5 +76,16 @@ describe("chordColor", () => {
 
   it("returns null for unparseable symbols", () => {
     expect(chordColor("???", C_MAJOR)).toBeNull()
+  })
+})
+
+describe("solidColor", () => {
+  it("matches the function-color rendering of the same hue", () => {
+    expect(solidColor(220)).toBe(chordColor("Cmaj", C_MAJOR))
+  })
+
+  it("renders red at hue 0", () => {
+    const color = solidColor(0)
+    expect((color >> 16) & 0xff).toBeGreaterThan(color & 0xff)
   })
 })
