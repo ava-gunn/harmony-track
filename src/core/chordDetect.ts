@@ -3,13 +3,15 @@ import type { DetectedChord, SimpleNote } from "./types.js"
 
 const EPS = 1e-6
 
-export function beatPitches(notes: SimpleNote[], startBeat: number, endBeat: number): number[][] {
-  const beats: number[][] = []
-  for (let b = startBeat; b < endBeat; b++) {
-    const sounding = notes.filter(n => n.startTime < b + 1 - EPS && n.startTime + n.duration > b + EPS)
-    beats.push([...new Set(sounding.map(n => n.pitch))].sort((x, y) => x - y))
+export function beatPitches(notes: SimpleNote[], startBeat: number, endBeat: number, step = 1): number[][] {
+  const windows: number[][] = []
+  const count = Math.ceil((endBeat - startBeat) / step - EPS)
+  for (let i = 0; i < count; i++) {
+    const start = startBeat + i * step
+    const sounding = notes.filter(n => n.startTime < start + step - EPS && n.startTime + n.duration > start + EPS)
+    windows.push([...new Set(sounding.map(n => n.pitch))].sort((x, y) => x - y))
   }
-  return beats
+  return windows
 }
 
 const SHARP_TO_FLAT: Record<string, string> = {

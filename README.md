@@ -6,10 +6,10 @@ An Ableton Live extension that builds a silent harmony guide track from any MIDI
 
 Right-click a MIDI clip containing chords → **Extract Harmony Track (Clip)**. For multi-clip selections — an arrangement time selection across tracks, or selected session clip slots — use **Extract Harmony Track (Selection)**, which appears alongside the single-clip action when a selection exists. Selected clips are analyzed *together* on the shared timeline, so chords on one track and a bassline on another combine into the true harmony (C+E+G over an A bass reads as Am7). The extension:
 
-1. Quantizes the clip's notes to the beat grid
-2. Detects the chord on each beat and merges consecutive identical chords into regions
-3. If the Set has a scale enabled, derives each chord's harmonic function in that key
-4. Writes one arrangement clip per chord onto a muted MIDI track named **Harmony**, created directly above the source track, time-aligned with the source clip — each named `Cmaj / I`, `Am / vi`, `G7 / V7`, … and filled with the chord tones in every octave of the musical range (C1–C6, MIDI 36–96)
+1. Quantizes the clip's notes to the detection grid (by default following Live's grid setting)
+2. Detects the chord in each grid window and merges consecutive identical chords into regions
+3. If the Set has a scale enabled, derives each chord's harmonic function in that key — including applied dominants (`A7` before `Dm` reads `V7/ii`, not `VI7`)
+4. Writes one arrangement clip per chord onto a muted MIDI track named **Harmony**, created directly above the source track, time-aligned with the source clip — each named `Cmaj / I`, `Am / vi`, `G7 / V7`, … and filled with the chord tones in every octave of the guide range (default C2–C5, MIDI 48–84). Chord tones sit at velocity 127 and the remaining in-key scale tones at velocity 1, so the piano roll's velocity shading reads bright = chord, dim = key, absent = outside
 5. Colors each clip by the chord root's position on the circle of fifths relative to the key (after Scriabin's circle-of-fifths color wheel, anchored key-relatively): the tonic is blue, the sharp side walks cyan → green → yellow → orange (V, ii, vi, iii, vii°), the flat side walks violet → magenta (IV, bVII, bIII, bVI, bII), and both converge on red at the chromatic tritone. Out-of-scale chord tones push a chord further toward red, so borrowed chords read warmer than diatonic ones on the same root. No scale set → Live's default clip color.
 
 The Harmony track plays no sound: it stays muted and gets no instrument. Re-running the extraction replaces only the harmony clips overlapping the source clip's range, so you can extract different sections from different clips into the same track.
@@ -36,6 +36,26 @@ npm run package # build + produce the distributable .ablx
 ```
 
 Then in Live: Settings → Extensions to install/enable, and right-click any MIDI clip.
+
+**Add Chord Locators** (on a clip or arrangement selection) runs the same analysis and writes arrangement cue points named after each chord instead of clips — useful for navigating a song's harmony from the timeline.
+
+Multi-track selections skip tracks containing a Drum Rack, so percussion doesn't pollute chord detection.
+
+## Settings
+
+Access the settings by right-clicking and choosing **Harmony Track Settings…**. Settings persist across Live sessions in the extension's storage directory and apply to the next extraction — they don't retroactively change clips already on the Harmony track; re-run the extraction to apply.
+
+| Setting | Default | What it does |
+|---|---|---|
+| **Detection grid** | Auto | The window size for chord detection and note quantization. *Auto* follows Live's current grid setting (snapped to the nearest of 1/16 … 1 bar); or pick an explicit size. Coarser = smoother regions that ignore passing chords; finer = catches quick changes. |
+| **Guide range** | 48 – 84 | MIDI pitch range the guide notes span (C2–C5 in Live's octave naming). Widen it if you write in extreme registers; narrow it to reduce clutter. |
+| **Dim scale-tone layer** | On | Adds the in-key non-chord tones at velocity 1 beneath the velocity-127 chord tones: bright = in chord, dim = in key, absent = outside. Needs the Set's scale enabled. |
+| **Track name** | Harmony | Name of the guide track. The extension reuses any MIDI track with this name and creates one if none exists — rename here if "Harmony" collides with something in your template. |
+| **Color clips by function** | On | Toggles the circle-of-fifths clip coloring. Off = Live's default clip color. |
+| **Tonic hue** | Blue (220°) | The anchor color for the tonic chord; the swatch previews it. All other degrees walk the color wheel relative to this anchor. |
+| **Diatonic spread** | Default | How far apart the diatonic degrees sit on the color wheel: *Narrow* keeps the in-key family visually tight, *Wide* makes each degree more distinct. Non-diatonic chords always jump well into the warm zone regardless. |
+
+Cancel (or closing the window) discards changes. Settings are validated on load, so a corrupt or out-of-date settings file falls back to defaults field by field rather than failing.
 
 ## Release
 

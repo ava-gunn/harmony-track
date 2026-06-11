@@ -1,21 +1,40 @@
 import { describe, expect, it } from "vitest"
 import { guideNotes, MAX_GUIDE_PITCH, MIN_GUIDE_PITCH } from "../src/core/guideNotes.js"
+import { C_MAJOR } from "./helpers.js"
 
 describe("guideNotes", () => {
-  it("emits every chord tone in every octave of the guide range", () => {
+  it("emits every chord tone in every octave of the default guide range", () => {
     const notes = guideNotes("Cmaj", 4)
     expect(notes.every(n => [0, 4, 7].includes(n.pitch % 12))).toBe(true)
-    expect(notes.filter(n => n.pitch % 12 === 0).map(n => n.pitch)).toEqual([36, 48, 60, 72, 84, 96])
+    expect(notes.filter(n => n.pitch % 12 === 0).map(n => n.pitch)).toEqual([48, 60, 72, 84])
   })
 
-  it("stays within the musical guide range", () => {
+  it("stays within the guide range", () => {
     const notes = guideNotes("Am7", 4)
     expect(notes.every(n => n.pitch >= MIN_GUIDE_PITCH && n.pitch <= MAX_GUIDE_PITCH)).toBe(true)
   })
 
-  it("spans the full clip duration at velocity 100", () => {
+  it("respects a custom range", () => {
+    const notes = guideNotes("Cmaj", 4, { low: 60, high: 72 })
+    expect(notes.map(n => n.pitch)).toEqual([60, 64, 67, 72])
+  })
+
+  it("spans the full clip duration at velocity 127", () => {
     const notes = guideNotes("Am7", 8)
-    expect(notes.every(n => n.startTime === 0 && n.duration === 8 && n.velocity === 100)).toBe(true)
+    expect(notes.every(n => n.startTime === 0 && n.duration === 8 && n.velocity === 127)).toBe(true)
+  })
+
+  it("adds in-key non-chord tones at velocity 1", () => {
+    const notes = guideNotes("Cmaj", 4, { scaleToneLayer: true, key: C_MAJOR })
+    const dim = notes.filter(n => n.velocity === 1)
+    expect(dim.length).toBeGreaterThan(0)
+    expect(dim.every(n => [2, 5, 9, 11].includes(n.pitch % 12))).toBe(true) // D F A B
+    expect(notes.filter(n => n.pitch % 12 === 0).every(n => n.velocity === 127)).toBe(true)
+  })
+
+  it("adds no dim layer without a key", () => {
+    const notes = guideNotes("Cmaj", 4, { scaleToneLayer: true, key: null })
+    expect(notes.every(n => n.velocity === 127)).toBe(true)
   })
 
   it("covers all four tones of a seventh chord", () => {

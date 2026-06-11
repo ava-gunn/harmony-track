@@ -2,7 +2,7 @@ import { chordColor } from "./chordColor.js"
 import { beatPitches, detectBeatChord } from "./chordDetect.js"
 import { quantizeNotes } from "./quantize.js"
 import { mergeRegions } from "./regions.js"
-import { romanNumeral } from "./romanNumeral.js"
+import { romanNumeral, secondaryDominant } from "./romanNumeral.js"
 import type { ChordRegion, ClipView, DetectedChord, KeyContext, SimpleNote } from "./types.js"
 
 export function activeWindowLength(view: ClipView): number {
@@ -39,29 +39,51 @@ export function placeClip(view: ClipView, anchorBeat: number, targetDuration: nu
   return placed
 }
 
+export interface AnalyzeOptions {
+  gridBeats?: number
+  tonicHue?: number
+  diatonicStep?: number
+}
+
 export function analyzeNotes(
   notes: SimpleNote[],
   startBeat: number,
   endBeat: number,
-  key: KeyContext | null
+  key: KeyContext | null,
+  opts: AnalyzeOptions = {}
 ): ChordRegion[] {
   if (endBeat <= startBeat || notes.length === 0) return []
+  const grid = opts.gridBeats ?? 1
+  const colorOpts = { tonicHue: opts.tonicHue, diatonicStep: opts.diatonicStep }
 
-  const quantized = quantizeNotes(notes)
-  const beats = beatPitches(quantized, startBeat, endBeat)
+  const quantized = quantizeNotes(notes, grid)
+  const windows = beatPitches(quantized, startBeat, endBeat, grid)
 
   let prev: DetectedChord | null = null
-  const beatChords = beats.map(pitches => (prev = detectBeatChord(pitches, prev)))
+  const windowChords = windows.map(pitches => (prev = detectBeatChord(pitches, prev)))
 
-  return mergeRegions(beatChords).map(r => ({
-    startBeat: startBeat + r.startBeat,
-    endBeat: startBeat + r.endBeat,
+  const regions = mergeRegions(windowChords).map(r => ({
+    startBeat: startBeat + r.startBeat * grid,
+    endBeat: Math.min(startBeat + r.endBeat * grid, endBeat),
     chord: r.chord.symbol,
     numeral: key ? romanNumeral(r.chord.symbol, key) : null,
-    color: key ? chordColor(r.chord.symbol, key) : null,
+    color: key ? chordColor(r.chord.symbol, key, colorOpts) : null,
   }))
+
+  if (!key) return regions
+  return regions.map((r, i) => {
+    const next = regions[i + 1]
+    if (!next || next.startBeat !== r.endBeat) return r
+    const secondary = secondaryDominant(r.chord, next.chord, key)
+    return secondary ? { ...r, numeral: secondary } : r
+  })
 }
 
-export function analyzeClip(view: ClipView, key: KeyContext | null, targetDuration: number): ChordRegion[] {
-  return analyzeNotes(placeClip(view, 0, targetDuration), 0, Math.ceil(targetDuration), key)
+export function analyzeClip(
+  view: ClipView,
+  key: KeyContext | null,
+  targetDuration: number,
+  opts: AnalyzeOptions = {}
+): ChordRegion[] {
+  return analyzeNotes(placeClip(view, 0, targetDuration), 0, Math.ceil(targetDuration), key, opts)
 }

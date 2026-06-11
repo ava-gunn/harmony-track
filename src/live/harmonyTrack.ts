@@ -2,17 +2,19 @@ import { MidiTrack, type Song } from "@ableton-extensions/sdk"
 
 type V = "1.0.0"
 
-export const HARMONY_TRACK_NAME = "Harmony"
-
 // The SDK has no positional insert or move API; the only way to control track
 // position is duplicateTrack, which inserts immediately after the original.
 // To land directly above the source we duplicate the track above it and strip
 // it — only possible when that neighbor is a MidiTrack. Otherwise (source is
 // the first track, or sits below an audio/group track) we duplicate the source
 // itself, which lands directly below it.
-export async function findOrCreateHarmonyTrack(song: Song<V>, sourceTrack: MidiTrack<V>): Promise<MidiTrack<V>> {
+export async function findOrCreateHarmonyTrack(
+  song: Song<V>,
+  sourceTrack: MidiTrack<V>,
+  trackName: string
+): Promise<MidiTrack<V>> {
   const existing = song.tracks.find(
-    (t): t is MidiTrack<V> => t instanceof MidiTrack && t.name.trim() === HARMONY_TRACK_NAME
+    (t): t is MidiTrack<V> => t instanceof MidiTrack && t.name.trim() === trackName
   )
   if (existing) {
     existing.mute = true
@@ -38,7 +40,7 @@ export async function findOrCreateHarmonyTrack(song: Song<V>, sourceTrack: MidiT
     await copy.deleteDevice(device)
   }
 
-  copy.name = HARMONY_TRACK_NAME
+  copy.name = trackName
   copy.mute = true
   copy.arm = false
   return copy

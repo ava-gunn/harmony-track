@@ -100,6 +100,37 @@ describe("placeClip", () => {
   })
 })
 
+describe("analyzeNotes options", () => {
+  it("detects mid-bar changes at a finer grid and merges at a coarser one", () => {
+    // chord change at beat 2: |C C G G| within one bar
+    const notes = [...chordNotes([60, 64, 67], 0, 2), ...chordNotes([55, 59, 62], 2, 2)]
+    expect(analyzeNotes(notes, 0, 4, null, { gridBeats: 2 }).map(r => [r.startBeat, r.endBeat, r.chord])).toEqual([
+      [0, 2, "Cmaj"],
+      [2, 4, "Gmaj"],
+    ])
+    expect(analyzeNotes(notes, 0, 4, null, { gridBeats: 0.5 })).toHaveLength(2)
+  })
+
+  it("labels secondary dominants from region context", () => {
+    // |Cmaj | A7 | Dm | G7| — A7 is V7/ii, G7 stays V7
+    const notes = [
+      ...chordNotes([60, 64, 67], 0, 4),
+      ...chordNotes([57, 61, 64, 67], 4, 4),
+      ...chordNotes([50, 53, 57], 8, 4),
+      ...chordNotes([55, 59, 62, 65], 12, 4),
+    ]
+    const numerals = analyzeNotes(notes, 0, 16, C_MAJOR).map(r => r.numeral)
+    expect(numerals).toEqual(["I", "V7/ii", "ii", "V7"])
+  })
+
+  it("passes color options through to region colors", () => {
+    const notes = chordNotes([60, 64, 67], 0, 4)
+    const blue = analyzeNotes(notes, 0, 4, C_MAJOR)[0].color
+    const shifted = analyzeNotes(notes, 0, 4, C_MAJOR, { tonicHue: 100 })[0].color
+    expect(shifted).not.toBe(blue)
+  })
+})
+
 describe("analyzeNotes across multiple clips", () => {
   it("combines stacked clips into one harmony (chords + bass)", () => {
     // chord clip plays C E G, a separate bass clip adds the A that makes it Am7

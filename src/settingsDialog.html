@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  body { background: #1c1c1c; color: #d4d4d4; font: 13px system-ui; margin: 0; padding: 16px 20px; }
+  h1 { font-size: 14px; margin: 0 0 12px; }
+  .row { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; gap: 12px; }
+  label { flex: none; }
+  select, input[type=number], input[type=text] {
+    background: #2e2e2e; color: #d4d4d4; border: 1px solid #3a3a3a; border-radius: 5px; padding: 4px 8px;
+  }
+  input[type=range] { width: 130px; }
+  .swatch { width: 22px; height: 22px; border-radius: 5px; border: 1px solid #3a3a3a; flex: none; }
+  .hue-row { display: flex; align-items: center; gap: 8px; }
+  fieldset { border: 1px solid #3a3a3a; border-radius: 6px; margin: 14px 0 0; padding: 2px 12px 8px; }
+  legend { padding: 0 6px; color: #9a9a9a; }
+  footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+  button { background: #2e2e2e; color: #d4d4d4; border: 1px solid #3a3a3a; border-radius: 5px; padding: 6px 16px; }
+  #ok { background: #ffa500; color: #000; border: none; font-weight: 700; }
+</style>
+</head>
+<body>
+  <h1>Harmony Track Settings</h1>
+
+  <div class="row">
+    <label for="detectionGrid">Detection grid</label>
+    <select id="detectionGrid">
+      <option value="auto">Auto (follow Live's grid)</option>
+      <option value="0.25">1/16</option>
+      <option value="0.5">1/8</option>
+      <option value="1">1/4 (beat)</option>
+      <option value="2">1/2 bar</option>
+      <option value="4">Bar</option>
+    </select>
+  </div>
+
+  <div class="row">
+    <label>Guide range (MIDI)</label>
+    <span>
+      <input id="guideRangeLow" type="number" min="0" max="127" style="width:54px"> –
+      <input id="guideRangeHigh" type="number" min="0" max="127" style="width:54px">
+    </span>
+  </div>
+
+  <div class="row"><label for="scaleToneLayer">Dim scale-tone layer</label><input id="scaleToneLayer" type="checkbox"></div>
+  <div class="row"><label for="trackName">Track name</label><input id="trackName" type="text" style="width:140px"></div>
+
+  <fieldset>
+    <legend>Colors</legend>
+    <div class="row"><label for="colorByFunction">Color clips by function</label><input id="colorByFunction" type="checkbox"></div>
+    <div class="row">
+      <label for="tonicHue">Tonic hue</label>
+      <span class="hue-row">
+        <input id="tonicHue" type="range" min="0" max="359" step="1">
+        <span class="swatch" id="tonicSwatch"></span>
+      </span>
+    </div>
+    <div class="row">
+      <label for="diatonicStep">Diatonic spread</label>
+      <select id="diatonicStep">
+        <option value="16">Narrow</option>
+        <option value="24">Default</option>
+        <option value="32">Wide</option>
+      </select>
+    </div>
+  </fieldset>
+
+  <footer>
+    <button id="cancel">Cancel</button>
+    <button id="ok">OK</button>
+  </footer>
+
+<script>
+  const SETTINGS = /*__SETTINGS__*/null;
+  const $ = id => document.getElementById(id);
+
+  $("detectionGrid").value = String(SETTINGS.detectionGrid);
+  $("guideRangeLow").value = SETTINGS.guideRangeLow;
+  $("guideRangeHigh").value = SETTINGS.guideRangeHigh;
+  for (const k of ["scaleToneLayer", "colorByFunction"]) $(k).checked = SETTINGS[k];
+  $("trackName").value = SETTINGS.trackName;
+  $("tonicHue").value = SETTINGS.tonicHue;
+  if (![...$("diatonicStep").options].some(o => Number(o.value) === SETTINGS.diatonicStep)) {
+    const custom = document.createElement("option");
+    custom.value = String(SETTINGS.diatonicStep);
+    custom.textContent = `Custom (${SETTINGS.diatonicStep}°)`;
+    $("diatonicStep").appendChild(custom);
+  }
+  $("diatonicStep").value = String(SETTINGS.diatonicStep);
+
+  const paintSwatch = () => {
+    $("tonicSwatch").style.background = `hsl(${$("tonicHue").value}, 65%, 55%)`;
+  };
+  $("tonicHue").addEventListener("input", paintSwatch);
+  paintSwatch();
+
+  function send(data) {
+    const msg = { method: "close_and_send", params: [JSON.stringify(data)] };
+    if (window.webkit?.messageHandlers?.live) window.webkit.messageHandlers.live.postMessage(msg);
+    else if (window.chrome?.webview) window.chrome.webview.postMessage(msg);
+  }
+
+  $("cancel").addEventListener("click", () => send({ action: "cancel" }));
+  $("ok").addEventListener("click", () => {
+    const grid = $("detectionGrid").value;
+    send({
+      action: "save",
+      settings: {
+        detectionGrid: grid === "auto" ? "auto" : Number(grid),
+        guideRangeLow: Number($("guideRangeLow").value),
+        guideRangeHigh: Number($("guideRangeHigh").value),
+        scaleToneLayer: $("scaleToneLayer").checked,
+        colorByFunction: $("colorByFunction").checked,
+        tonicHue: Number($("tonicHue").value),
+        diatonicStep: Number($("diatonicStep").value),
+        trackName: $("trackName").value.trim() || "Harmony",
+      },
+    });
+  });
+</script>
+</body>
+</html>

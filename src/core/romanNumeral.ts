@@ -29,3 +29,36 @@ function qualitySuffix(alias: string): string {
   if (alias.startsWith("m")) return alias.slice(1)
   return alias
 }
+
+// "A7 → Dm" in C major is V7/ii, not VI7: a non-diatonic major/dominant chord
+// resolving down a perfect fifth into the next region is an applied dominant
+export function secondaryDominant(chordSymbol: string, nextSymbol: string, key: KeyContext): string | null {
+  const chord = Chord.get(chordSymbol)
+  const next = Chord.get(nextSymbol)
+  if (chord.empty || !chord.tonic || next.empty || !next.tonic) return null
+
+  const rootChroma = Note.chroma(chord.tonic)
+  const nextChroma = Note.chroma(next.tonic)
+  if (rootChroma == null || nextChroma == null) return null
+
+  const isDominantQuality =
+    chord.intervals.includes("3M") &&
+    !chord.intervals.includes("5A") &&
+    chord.intervals.every(iv => iv !== "7M")
+  if (!isDominantQuality) return null
+
+  const scale = new Set(key.scaleIntervals.map(i => (key.rootChroma + i) % 12))
+  const chromas = chord.notes.map(n => Note.chroma(n)).filter((c): c is number => c != null)
+  const diatonic = chromas.every(c => scale.has(c))
+  if (diatonic) return null // a plain V7 etc. keeps its ordinary numeral
+
+  if ((rootChroma - 7 + 12) % 12 !== nextChroma) return null // must resolve down a fifth
+  if (nextChroma === key.rootChroma) return null // resolving to the tonic is just V
+
+  const targetTriad = next.tonic + (next.intervals.includes("3m") ? "m" : "")
+  const target = romanNumeral(targetTriad, key)
+  if (!target) return null
+
+  const seventh = chord.intervals.includes("7m") ? "7" : ""
+  return `V${seventh}/${target}`
+}

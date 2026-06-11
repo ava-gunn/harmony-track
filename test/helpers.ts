@@ -31,6 +31,12 @@ export const A_MINOR: KeyContext = {
   scaleIntervals: [0, 2, 3, 5, 7, 8, 10],
 }
 
+export const C_MINOR: KeyContext = {
+  rootChroma: 0,
+  scaleName: "Minor",
+  scaleIntervals: [0, 2, 3, 5, 7, 8, 10],
+}
+
 export const F_LYDIAN: KeyContext = {
   rootChroma: 5,
   scaleName: "Lydian",

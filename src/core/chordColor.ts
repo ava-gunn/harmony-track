@@ -1,13 +1,18 @@
 import { Chord, Note } from "tonal"
 import type { KeyContext } from "./types.js"
 
-const TONIC_HUE = 220 // blue
 // Live's palette spaces ~14 hues ≈ 26° apart; diatonic steps stay just under
 // that so the family reads as close-knit cool colors while (usually) snapping
 // to distinct swatches. Chromatic pushes stride wider so non-diatonic chords
 // leap decisively into the warm zone.
-const DIATONIC_STEP = 24
+const DEFAULT_TONIC_HUE = 220 // blue
+const DEFAULT_DIATONIC_STEP = 24
 const CHROMATIC_STEP = 30
+
+export interface ColorOptions {
+  tonicHue?: number
+  diatonicStep?: number
+}
 
 // Key-relative circle-of-fifths color wheel (after Scriabin's clavier à
 // lumières, which walks the spectrum around the circle of fifths): the tonic
@@ -17,7 +22,9 @@ const CHROMATIC_STEP = 30
 // flat 1.5 chromatic steps along its side plus a proportional push, with both
 // sides clamping at red — so borrowed and applied chords run visibly hot even
 // after Live snaps colors to its palette.
-export function chordHue(chordSymbol: string, key: KeyContext): number | null {
+export function chordHue(chordSymbol: string, key: KeyContext, opts: ColorOptions = {}): number | null {
+  const tonicHue = opts.tonicHue ?? DEFAULT_TONIC_HUE
+  const diatonicStep = opts.diatonicStep ?? DEFAULT_DIATONIC_STEP
   const chord = Chord.get(chordSymbol)
   if (chord.empty || !chord.tonic) return null
   const rootChroma = Note.chroma(chord.tonic)
@@ -33,15 +40,15 @@ export function chordHue(chordSymbol: string, key: KeyContext): number | null {
   const sharpSide = fifthsPosition <= 6
   const baseSteps = sharpSide ? fifthsPosition : 12 - fifthsPosition
   const chromaticPush = outOfScale === 0 ? 0 : 1.5 + outOfScale * 2
-  const offset = baseSteps * DIATONIC_STEP + chromaticPush * CHROMATIC_STEP
+  const offset = baseSteps * diatonicStep + chromaticPush * CHROMATIC_STEP
 
   return sharpSide
-    ? Math.max(0, TONIC_HUE - offset)
-    : Math.min(360, TONIC_HUE + offset)
+    ? Math.max(0, tonicHue - offset)
+    : Math.min(360, tonicHue + offset)
 }
 
-export function chordColor(chordSymbol: string, key: KeyContext): number | null {
-  const hue = chordHue(chordSymbol, key)
+export function chordColor(chordSymbol: string, key: KeyContext, opts: ColorOptions = {}): number | null {
+  const hue = chordHue(chordSymbol, key, opts)
   if (hue == null) return null
   return hslToRgb(hue, 0.65, 0.55)
 }
