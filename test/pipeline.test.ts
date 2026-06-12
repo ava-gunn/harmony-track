@@ -137,6 +137,12 @@ describe("analyzeNotes options", () => {
     expect(analyzeNotes(notes, 0, 8, C_MAJOR)[0].numeral).toBe("V7/ii")
   })
 
+  it("attaches scale suggestions to each region", () => {
+    const regions = analyzeNotes(progression, 0, 16, C_MAJOR)
+    expect(regions[1].scales[0]).toBe("A Minor") // Am in C major → A aeolian
+    expect(regions.every(r => r.scales.length > 0 && r.scales.length <= 3)).toBe(true)
+  })
+
   it("passes color options through to region colors", () => {
     const notes = chordNotes([60, 64, 67], 0, 4)
     const blue = analyzeNotes(notes, 0, 4, C_MAJOR)[0].color

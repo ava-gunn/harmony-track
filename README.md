@@ -91,4 +91,5 @@ test/          vitest suites for everything under src/core/
 - Extensions SDK 1.0.0-beta.0 is run-once with no event/observer, transport, or control-surface APIs — the track can't update live as you edit. Re-run the extraction after changing the source clip.
 - Track positioning is constrained: the SDK's only placement primitive is "duplicate inserts after the original". The Harmony track lands directly above the source when the track above it is a MIDI track; if the source is the first track or sits below an audio/group track, it lands directly below instead. An existing Harmony track is reused wherever you've moved it.
 - Session-view source clips anchor their harmony clips at arrangement beat 0.
+- Per-clip scale can't be set (no writable scale API in SDK 1.0), so chord-scale suggestions aren't surfaced in Live yet. The analysis already computes them per region (`src/core/scaleSuggest.ts`, exposed as `ChordRegion.scales`) — ready to wire up when the SDK adds clip scale or info-text.
 - For looping clips the analysis window is `[startMarker, loopEnd)`, tiled across the clip's arrangement length.

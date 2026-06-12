@@ -3,6 +3,7 @@ import { beatPitches, detectBeatChord } from "./chordDetect.js"
 import { quantizeNotes } from "./quantize.js"
 import { mergeRegions } from "./regions.js"
 import { romanNumeral, secondaryDominant } from "./romanNumeral.js"
+import { suggestScales } from "./scaleSuggest.js"
 import type { ChordRegion, ClipView, DetectedChord, KeyContext, SimpleNote } from "./types.js"
 
 export function activeWindowLength(view: ClipView): number {
@@ -63,13 +64,18 @@ export function analyzeNotes(
   let prev: DetectedChord | null = null
   const windowChords = windows.map(pitches => (prev = detectBeatChord(pitches, prev)))
 
-  const regions = mergeRegions(windowChords).map(r => ({
+  const merged = mergeRegions(windowChords).map(r => ({
     startBeat: startBeat + r.startBeat * grid,
     endBeat: Math.min(startBeat + r.endBeat * grid, endBeat),
     chord: r.chord.symbol,
     numeral: key ? romanNumeral(r.chord.symbol, key) : null,
     color: key ? chordColor(r.chord.symbol, key, colorOpts) : null,
   }))
+
+  const regions = merged.map((r, i) => {
+    const neighbors = [merged[i - 1]?.chord, merged[i + 1]?.chord].filter((c): c is string => c != null)
+    return { ...r, scales: suggestScales(r.chord, key, neighbors) }
+  })
 
   if (!key || opts.secondaryDominants === false) return regions
   return regions.map((r, i) => {

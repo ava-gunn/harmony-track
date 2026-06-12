@@ -30,4 +30,5 @@ export interface ChordRegion {
   chord: string
   numeral: string | null
   color: number | null
+  scales: string[]
 }

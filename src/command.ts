@@ -29,6 +29,12 @@ interface Source {
   targetDuration: number
 }
 
+// region.scales (best-matching playable scales) is intentionally unused here:
+// SDK 1.0 has no writable clip scale or info-text to surface them in Live
+function regionLabel(region: ChordRegion): string {
+  return region.numeral ? `${region.chord} / ${region.numeral}` : region.chord
+}
+
 const isClipSlotSelection = (arg: unknown): arg is ClipSlotSelection =>
   typeof arg === "object" && arg !== null && "selected_clip_slots" in arg
 
@@ -132,7 +138,7 @@ export async function extractHarmonyTrack(context: ExtensionContext<V>, arg: unk
           if (signal.aborted) return
           const length = region.endBeat - region.startBeat
           const guideClip = await track.createMidiClip(region.startBeat, length)
-          guideClip.name = region.numeral ? `${region.chord} / ${region.numeral}` : region.chord
+          guideClip.name = regionLabel(region)
           if (settings.colorMode === "function" && region.color != null) guideClip.color = region.color
           else if (settings.colorMode === "solid") guideClip.color = solidColor(settings.solidHue)
           guideClip.notes = guideNotes(region.chord, length, {
@@ -159,7 +165,7 @@ export async function addChordLocators(context: ExtensionContext<V>, arg: unknow
   await context.withinTransaction(() =>
     (async () => {
       for (const region of analysis.regions) {
-        const label = region.numeral ? `${region.chord} / ${region.numeral}` : region.chord
+        const label = regionLabel(region)
         const existing = song.cuePoints.find(c => Math.abs(c.time - region.startBeat) < CUE_EPS)
         if (existing) {
           existing.name = label
